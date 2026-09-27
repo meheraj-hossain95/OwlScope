@@ -1,0 +1,106 @@
+# ============================================
+# BOB AI ASSISTANT - SECURITY IGNORE PATTERNS
+# ============================================
+
+# Prevent Bob from accessing/logging sensitive credentials.
+# Keep the security patterns provided by IBM.
+
+# IBM Cloud API Keys
+*IBM_CLOUD_API_KEY*
+*ibm_cloud_api_key*
+*IBMCLOUD_API_KEY*
+*apikey*
+*api-key*
+*api_key*
+
+# Watson Service Credentials
+*WATSON_*_API_KEY*
+*watson_*_api_key*
+*WATSON_*_URL*
+*ASSISTANT_API_KEY*
+*DISCOVERY_API_KEY*
+
+# Generic Credentials
+*API_KEY*
+*api_key*
+*ACCESS_TOKEN*
+*access_token*
+*SECRET_KEY*
+*secret_key*
+*PASSWORD*
+*password*
+*SECRET*
+*secret*
+*CREDENTIAL*
+*credential*
+*PRIVATE_KEY*
+*private_key*
+*AUTH_TOKEN*
+*auth_token*
+*BEARER_TOKEN*
+*bearer_token*
+
+# Environment / Secret Files
+.env
+.env.*
+*.env
+env.local
+secrets/
+credentials/
+
+# Private Keys / Certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.cer
+*.crt
+id_rsa
+id_dsa
+
+# Database / Local State
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Python cache / test cache
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.pyc
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build / generated dependencies
+node_modules/
+dist/
+build/
+
+# Local cache / temporary files
+cache/
+.cache/
+.tmp/
+*.bak
+
+# ============================================
+# DO NOT IGNORE OWLSCOPE SOURCE CODE
+# ============================================
+# Bob should still be able to inspect:
+# *.py
+# templates/
+# static/
+# tests/
+# README.md
+# requirements.txt
+# HOW_TO_START.md
+# ============================================
