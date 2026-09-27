@@ -16,9 +16,7 @@
   <img src="https://img.shields.io/badge/data-100%25%20local-brightgreen" alt="Data 100% local" />
 </p>
 
----
-
-## What it does
+What it does
 
 Understanding a GitHub issue or PR usually means cloning the repo, opening a bunch of files, reading through comments, and tracing how the code connects, before you can even start fixing or reviewing anything. That's time spent just getting oriented, not actually solving the problem.
 
@@ -28,28 +26,30 @@ Understanding a GitHub issue or PR usually means cloning the repo, opening a bun
 
 OwlScope skips that step. Give it an issue or PR URL and it pulls the real context straight from GitHub, the description, comments, diff, and the actual source files involved, and turns it into a structured report: what's broken, what it affects, where the root cause likely is, how to fix it, what tests to write, and whether there's any security concern. It's not a replacement for reading the code, it just gets you oriented fast so you know exactly where to look.
 
-It uses a local LLM through Ollama, mainly because that made it easy to build and run as a demo without needing an API key or paying per request. It doesn't have to stay fully offline, swapping `llm_client.py` for a hosted model (OpenAI, Claude, etc.) is a small change if you'd rather do that.
+It uses a local LLM through Ollama, mainly because that made it easy to build and run as a demo without needing an API key or paying per request. It doesn't have to stay fully offline, swapping llm_client.py for a hosted model (OpenAI, Claude, etc.) is a small change if you'd rather do that.
 
+Table of Contents
 
----
+How It Works
 
-## Table of Contents
+The 8 Report Sections
 
-- [How It Works](#how-it-works)
-- [The 8 Report Sections](#the-8-report-sections)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Configuration](#configuration)
-- [Usage](#usage)
-- [Testing](#testing)
-- [Contributing](#contributing)
-- [License](#license)
+Project Structure
 
----
+Getting Started
 
-## How It Works
+Configuration
 
-```
+Usage
+
+Testing
+
+Contributing
+
+License
+
+How It Works
+
 User pastes URL
       │
       ▼
@@ -73,61 +73,114 @@ Report rendered as collapsible cards in the browser
       │
       ▼
 User downloads as Markdown or prints to PDF
-```
 
-**Parsing the URL.** A regex pulls out `owner`, `repo`, `number`, and whether it's an issue or a PR, from either `github.com/owner/repo/issues/N` or `github.com/owner/repo/pull/N`.
+Parsing the URL. A regex pulls out owner, repo, number, and whether it's an issue or a PR, from either github.com/owner/repo/issues/N or github.com/owner/repo/pull/N.
 
-**Pulling context from GitHub.** All done through the free GitHub REST API, no cloning, no OAuth needed for public repos:
+Pulling context from GitHub. All done through the free GitHub REST API, no cloning, no OAuth needed for public repos:
 
-| Data | Detail |
-|---|---|
-| Issue metadata | title, body, state, labels (real hex colors), author, avatar, timestamps, comment count |
-| Comments | up to 100, each with author + body |
-| PR details | head/base branches, changed files, additions/deletions, diff patches (capped at 3,000 chars/file) |
-| Repo file tree | recursive, up to 300 entries |
-| Relevant source files | top 5, picked by whether they're mentioned in the issue, show up in the diff, or sit at the repo root, capped at 4,000 chars each |
+Data
 
-Add a GitHub Personal Access Token to `.env` if you're going to be using this a lot, it bumps the rate limit from 60 requests/hour to 5,000.
+Detail
 
-**Building the prompt.** Everything is serialized into one context block, capped around 18,000 characters so it fits comfortably in a 7B model's context window. A system prompt frames the model as a senior engineer doing a review, and each section gets its own targeted instruction.
+Issue metadata
 
-**Rendering the report.** The response comes back as 8 named sections, each rendered as a collapsible card with proper Markdown, fenced code blocks, tables, the works. First section is open by default.
+title, body, state, labels (real hex colors), author, avatar, timestamps, comment count
 
----
+Comments
 
-## The 8 Report Sections
+up to 100, each with author + body
 
-| # | Section | What it gives you |
-|---|---------|--------------------|
-| 1 | **Issue Summary** | A plain-language version of what's broken or being asked for, with repro steps if it's a bug |
-| 2 | **Feature Impact** | Which routes, endpoints, or user flows are touched, or what a PR actually changes for users |
-| 3 | **Code Impact** | The specific files, classes, and functions involved, with a reason for each one |
-| 4 | **Call Graph / Visualization** | A quick text call chain, e.g. `route → handler → function` |
-| 5 | **Root Cause Location** | Best guess at the file(s) and line(s) causing the problem, backed by the diff and issue text |
-| 6 | **Fix Suggestions** | One or two real approaches, with code and a pros/cons breakdown |
-| 7 | **Test Generation** | Named test cases you could actually write, in whatever framework fits the repo |
-| 8 | **Security Impact** | Whether the change opens up anything around injection, auth, data exposure, etc., "nothing here" is a fine answer if that's genuinely the case |
+PR details
+
+head/base branches, changed files, additions/deletions, diff patches (capped at 3,000 chars/file)
+
+Repo file tree
+
+recursive, up to 300 entries
+
+Relevant source files
+
+top 5, picked by whether they're mentioned in the issue, show up in the diff, or sit at the repo root, capped at 4,000 chars each
+
+Add a GitHub Personal Access Token to .env if you're going to be using this a lot, it bumps the rate limit from 60 requests/hour to 5,000.
+
+Building the prompt. Everything is serialized into one context block, capped around 18,000 characters so it fits comfortably in a 7B model's context window. A system prompt frames the model as a senior engineer doing a review, and each section gets its own targeted instruction.
+
+Rendering the report. The response comes back as 8 named sections, each rendered as a collapsible card with proper Markdown, fenced code blocks, tables, the works. First section is open by default.
+
+The 8 Report Sections
+
+#
+
+Section
+
+What it gives you
+
+1
+
+Issue Summary
+
+A plain-language version of what's broken or being asked for, with repro steps if it's a bug
+
+2
+
+Feature Impact
+
+Which routes, endpoints, or user flows are touched, or what a PR actually changes for users
+
+3
+
+Code Impact
+
+The specific files, classes, and functions involved, with a reason for each one
+
+4
+
+Call Graph / Visualization
+
+A quick text call chain, e.g. route → handler → function
+
+5
+
+Root Cause Location
+
+Best guess at the file(s) and line(s) causing the problem, backed by the diff and issue text
+
+6
+
+Fix Suggestions
+
+One or two real approaches, with code and a pros/cons breakdown
+
+7
+
+Test Generation
+
+Named test cases you could actually write, in whatever framework fits the repo
+
+8
+
+Security Impact
+
+Whether the change opens up anything around injection, auth, data exposure, etc., "nothing here" is a fine answer if that's genuinely the case
 
 <details>
 <summary><b>Example from a real run: <code>openfaas/python-flask-template</code> PR #73</b></summary>
 
-> **Issue Summary**: Modern Docker build systems were skipping the `test` layer entirely because nothing in the Dockerfile actually depended on it before the `ship` layer.
->
-> **Root Cause Location**: `template/python3-flask-debian/Dockerfile`, lines 48 and 50. The `ship` stage builds off `build`, not `test`, so the test layer gets discarded.
->
-> **Fix Suggestions**: Change `FROM build as ship` to `FROM test as ship` so the test stage is forced into the build path.
->
-> **Security Impact**: None. It's a build-process change, doesn't touch runtime code or data handling.
+Issue Summary: Modern Docker build systems were skipping the test layer entirely because nothing in the Dockerfile actually depended on it before the ship layer.
+
+Root Cause Location: template/python3-flask-debian/Dockerfile, lines 48 and 50. The ship stage builds off build, not test, so the test layer gets discarded.
+
+Fix Suggestions: Change FROM build as ship to FROM test as ship so the test stage is forced into the build path.
+
+Security Impact: None. It's a build-process change, doesn't touch runtime code or data handling.
 
 </details>
 
 Every report also opens with a header showing the issue/PR type and state, the repo and number, title, author, dates, comment count, branch flow for PRs, and the actual GitHub label colors.
 
----
+Project Structure
 
-## Project Structure
-
-```
 OwlScope/
 ├── app.py                  # Flask routes, Jinja filters, download endpoint
 ├── config.py               # Environment variable loading
@@ -146,30 +199,42 @@ OwlScope/
     ├── base.html            # Base layout, footer
     ├── index.html           # Home page, input form, recent reports
     └── report.html          # Report page, header, TOC, section cards
-```
 
----
+Getting Started
 
-## Getting Started
+Prerequisites
 
-### Prerequisites
+Requirement
 
-| Requirement | Version | Notes |
-|---|---|---|
-| Python | 3.10+ | 3.11 recommended |
-| Ollama | latest | https://ollama.com, needs to be running locally |
-| Ollama model | any | Default is `qwen2.5-coder:7b`, pull it before your first run |
+Version
 
-### 1. Clone the repository
+Notes
 
-```bash
+Python
+
+3.10+
+
+3.11 recommended
+
+Ollama
+
+latest
+
+https://ollama.com, needs to be running locally
+
+Ollama model
+
+any
+
+Default is qwen2.5-coder:7b, pull it before your first run
+
+1. Clone the repository
+
 git clone https://github.com/your-username/owlscope.git
 cd owlscope/OwlScope
-```
 
-### 2. Create a virtual environment
+2. Create a virtual environment
 
-```bash
 python -m venv .venv
 
 # Windows
@@ -177,23 +242,17 @@ python -m venv .venv
 
 # macOS / Linux
 source .venv/bin/activate
-```
 
-### 3. Install dependencies
+3. Install dependencies
 
-```bash
 pip install -r requirements.txt
-```
 
-### 4. Configure environment
+4. Configure environment
 
-```bash
 cp .env.example .env
-```
 
-Then edit `.env`:
+Then edit .env:
 
-```env
 # Local Ollama (default)
 OLLAMA_HOST=http://localhost:11434
 
@@ -207,73 +266,91 @@ GITHUB_TOKEN=your_github_pat_here
 
 # Change this to a long random string if you ever deploy this
 FLASK_SECRET_KEY=your-secret-key
-```
 
-### 5. Pull the Ollama model
+5. Pull the Ollama model
 
-```bash
 ollama pull qwen2.5-coder:7b
-```
 
 Any model you have in Ollama will work, bigger models (14B+) tend to give more detailed reports if your machine can handle them.
 
-### 6. Start Ollama
+6. Start Ollama
 
-```bash
 ollama serve
-```
 
-### 7. Run OwlScope
+7. Run OwlScope
 
-```bash
 python app.py
-```
 
-Then open **http://localhost:5000**.
+Then open http://localhost:5000.
 
----
+Configuration
 
-## Configuration
+Variable
 
-| Variable | Default | Description |
-|---|---|---|
-| `OLLAMA_HOST` | `http://localhost:11434` | Ollama server URL. Works with ngrok tunnels too if you're running Ollama elsewhere. |
-| `OLLAMA_MODEL` | `qwen2.5-coder:7b` | Any model installed in your Ollama instance. |
-| `GITHUB_TOKEN` | *(empty)* | Optional PAT, bumps the rate limit to 5,000 req/hour. |
-| `FLASK_SECRET_KEY` | *(dev default)* | Flask session secret, change it before deploying anywhere real. |
-| `CACHE_DIR` | `./cache` | Where cached report JSON files get stored. |
+Default
 
----
+Description
 
-## Usage
+OLLAMA_HOST
 
-1. Open `http://localhost:5000`
-2. Check that the "Ollama connected" badge is green
-3. Paste a GitHub issue or PR URL, for example:
-   - `https://github.com/openfaas/python-flask-template/pull/73`
-   - `https://github.com/django/django/issues/16403`
-4. Click **Investigate**
-5. Give it 15-45 seconds, depending on your model size
-6. Expand the sections you care about
-7. Use the **Jump To** pills to skip around
-8. Download as Markdown, or print to PDF
+http://localhost:11434
 
----
+Ollama server URL. Works with ngrok tunnels too if you're running Ollama elsewhere.
 
-## Testing
+OLLAMA_MODEL
 
-```bash
+qwen2.5-coder:7b
+
+Any model installed in your Ollama instance.
+
+GITHUB_TOKEN
+
+(empty)
+
+Optional PAT, bumps the rate limit to 5,000 req/hour.
+
+FLASK_SECRET_KEY
+
+(dev default)
+
+Flask session secret, change it before deploying anywhere real.
+
+CACHE_DIR
+
+./cache
+
+Where cached report JSON files get stored.
+
+Usage
+
+Open http://localhost:5000
+
+Check that the "Ollama connected" badge is green
+
+Paste a GitHub issue or PR URL, for example:
+
+https://github.com/openfaas/python-flask-template/pull/73
+
+https://github.com/django/django/issues/16403
+
+Click Investigate
+
+Give it 15-45 seconds, depending on your model size
+
+Expand the sections you care about
+
+Use the Jump To pills to skip around
+
+Download as Markdown, or print to PDF
+
+Testing
+
 pytest tests/
-```
 
----
+Contributing
 
-## Contributing
+If you find this useful and want to extend it, go for it. Fork it, branch off, add or update tests under tests/, make sure pytest tests/ passes, and open a PR explaining what you changed and why.
 
-If you find this useful and want to extend it, go for it. Fork it, branch off, add or update tests under `tests/`, make sure `pytest tests/` passes, and open a PR explaining what you changed and why.
+License
 
----
-
-## License
-
-MIT, see [LICENSE](LICENSE).
+MIT, see LICENSE.
