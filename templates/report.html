@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% set issue = report.issue %}
+{% set repo  = report.repo %}
+
+{% block title %}OwlScope — {{ repo.full_name }} #{{ issue.number }}{% endblock %}
+
+{% macro section_icon(key) %}
+  {% if key == "issue_summary" %}
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h6M5 8h6M5 11h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+  {% elif key == "feature_impact" %}
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 1l1.8 5.2H15l-4.6 3.3 1.7 5.3L8 11.8l-4.1 3 1.7-5.3L1 6.2h5.2L8 1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+  {% elif key == "code_impact" %}
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M5 4L1 8l4 4M11 4l4 4-4 4M9 2l-2 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  {% elif key == "visualization" %}
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="3" cy="8" r="2" stroke="currentColor" stroke-width="1.4"/><circle cx="13" cy="4" r="2" stroke="currentColor" stroke-width="1.4"/><circle cx="13" cy="12" r="2" stroke="currentColor" stroke-width="1.4"/><path d="M5 8h3M8 8l3-3M8 8l3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+  {% elif key == "root_cause" %}
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><circle cx="8" cy="8" r="3.5" stroke="currentColor" stroke-width="1.4"/><circle cx="8" cy="8" r="1" fill="currentColor"/></svg>
+  {% elif key == "fix_suggestions" %}
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M11.5 2.5a3 3 0 010 4.24L5.12 13.12 2 14l.88-3.12L9.24 4.5a3 3 0 012.26-2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+  {% elif key == "test_generation" %}
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2.5 8.5l3.5 3.5 7-7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  {% elif key == "security_impact" %}
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 1.5L2 4v5c0 3.3 2.7 5.5 6 6.5 3.3-1 6-3.2 6-6.5V4L8 1.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+  {% endif %}
+{% endmacro %}
+
+{% block content %}
+
+{# ── Top navigation bar ─────────────────────────────────────────────────── #}
+<div class="report-topbar">
+  <a href="{{ url_for('index') }}" class="btn-secondary btn-sm">
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Analyze Another
+  </a>
+  <div class="report-topbar-actions">
+    <a href="{{ url_for('download_report', cache_key=cache_key) }}" class="btn-secondary btn-sm">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M5 7l3 3 3-3M3 13h10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Markdown
+    </a>
+    <button class="btn-secondary btn-sm" onclick="window.print()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="3" y="6" width="10" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><path d="M5 6V3h6v3M5 11h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      PDF
+    </button>
+  </div>
+</div>
+
+{# ── Report Header ───────────────────────────────────────────────────────── #}
+<div class="report-header">
+
+  {# Row 1: Type badge + State badge + Repo link + Issue number #}
+  <div class="rh-badges-row">
+    {% if report.is_pr %}
+      <span class="badge badge-pr">Pull Request</span>
+    {% else %}
+      <span class="badge badge-issue">Issue</span>
+    {% endif %}
+
+    {% if issue.state == "merged" %}
+      <span class="badge badge-merged">Merged</span>
+    {% elif issue.state == "closed" %}
+      <span class="badge badge-closed">Closed</span>
+    {% else %}
+      <span class="badge badge-open">Open</span>
+    {% endif %}
+
+    <a href="https://github.com/{{ repo.full_name }}" target="_blank" class="rh-repo-link">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 005.47 7.59c.4.07.55-.17.55-.38v-1.34C3.73 14.4 3.26 13 3.26 13c-.36-.92-.89-1.16-.89-1.16-.73-.5.05-.49.05-.49.8.06 1.23.82 1.23.82.71 1.22 1.87.87 2.33.66.07-.52.28-.87.5-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.58.82-2.14-.08-.2-.36-1.01.08-2.1 0 0 .67-.21 2.2.82A7.67 7.67 0 018 4.27c.68 0 1.36.09 2 .27 1.52-1.03 2.2-.82 2.2-.82.44 1.09.16 1.9.08 2.1.51.56.82 1.27.82 2.14 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.19c0 .21.15.46.55.38A8 8 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      {{ repo.full_name }}
+    </a>
+    <span class="rh-number">#{{ issue.number }}</span>
+  </div>
+
+  {# Row 2: Title #}
+  <h1 class="rh-title">{{ issue.title }}</h1>
+
+  {# Row 3: Author + dates + comment count + PR branches #}
+  <div class="rh-meta-row">
+    {% if issue.author_avatar %}
+      <img src="{{ issue.author_avatar }}" alt="{{ issue.author }}" class="rh-avatar" />
+    {% endif %}
+    <span class="rh-author">{{ issue.author }}</span>
+    {% if issue.created_at %}
+      <span class="rh-sep">·</span>
+      <span class="rh-date">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M5 1v3M11 1v3M2 7h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Created {{ issue.created_at[:10] }}
+      </span>
+    {% endif %}
+    {% if issue.updated_at and issue.updated_at != issue.created_at %}
+      <span class="rh-sep">·</span>
+      <span class="rh-date">Updated {{ issue.updated_at[:10] }}</span>
+    {% endif %}
+    {% if issue.comments is defined %}
+      <span class="rh-sep">·</span>
+      <span class="rh-date">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M2 2h12v9H9l-3 3v-3H2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        {{ issue.comments }} comment{{ 's' if issue.comments != 1 else '' }}
+      </span>
+    {% endif %}
+    {% if report.is_pr and report.pr_branches %}
+      <span class="rh-sep">·</span>
+      <span class="rh-branch">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><circle cx="5" cy="3.5" r="1.5" stroke="currentColor" stroke-width="1.4"/><circle cx="5" cy="12.5" r="1.5" stroke="currentColor" stroke-width="1.4"/><circle cx="11" cy="3.5" r="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M5 5v6M5 5c0 3 6 3 6 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <code class="rh-branch-code">{{ report.pr_branches.head }}</code>
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M4 8h8M9 5l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <code class="rh-branch-code">{{ report.pr_branches.base }}</code>
+      </span>
+    {% endif %}
+  </div>
+
+  {# Row 4: Labels #}
+  {% if issue.labels %}
+  <div class="rh-labels-row">
+    {% for label in issue.labels %}
+      {% if label is mapping %}
+        <span class="rh-label" style="background:#{{ label.color }}22;color:#{{ label.color }};border-color:#{{ label.color }}55;">{{ label.name }}</span>
+      {% else %}
+        <span class="rh-label">{{ label }}</span>
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {# Row 5: Generated timestamp #}
+  <div class="rh-generated">
+    <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Generated {{ report.generated_at[:19].replace("T", " ") }} UTC
+  </div>
+</div>
+
+{# ── Table of contents ───────────────────────────────────────────────────── #}
+<nav class="toc">
+  <div class="toc-header">
+    <span class="toc-label">Jump to</span>
+  </div>
+  <div class="toc-links">
+    {% for key in section_order %}
+      {% if report.sections.get(key) %}
+        <a href="#section-{{ key }}" class="toc-link">{{ section_labels[key] }}</a>
+      {% endif %}
+    {% endfor %}
+  </div>
+</nav>
+
+{# ── Section cards ───────────────────────────────────────────────────────── #}
+<div class="report-body">
+  {% for key in section_order %}
+    {% if report.sections.get(key) %}
+    <section class="report-section" id="section-{{ key }}">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-header-left">
+          <span class="section-icon">{{ section_icon(key) }}</span>
+          <h2 class="section-heading">{{ section_labels[key] }}</h2>
+        </div>
+        <svg class="section-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="section-content md-content">
+        {{ report.sections.get(key, "") | md }}
+      </div>
+    </section>
+    {% endif %}
+  {% endfor %}
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var sections = document.querySelectorAll(".report-section");
+    sections.forEach(function (sec, i) {
+      var content = sec.querySelector(".section-content");
+      var chevron = sec.querySelector(".section-chevron");
+      if (i === 0) {
+        content.style.display = "block";
+        chevron.classList.add("open");
+      } else {
+        content.style.display = "none";
+      }
+    });
+  });
+
+  function toggleSection(header) {
+    var content = header.parentElement.querySelector(".section-content");
+    var chevron = header.querySelector(".section-chevron");
+    var isOpen = content.style.display !== "none";
+    content.style.display = isOpen ? "none" : "block";
+    chevron.classList.toggle("open", !isOpen);
+  }
+</script>
+{% endblock %}

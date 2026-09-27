@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}OwlScope — Issue Investigator{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <div class="hero-heading-row">
+    <img src="{{ url_for('static', filename='icon.png') }}" alt="OwlScope" class="hero-icon" />
+    <h1 class="hero-title">
+      <span>Investigate any</span>
+      <span>GitHub Issue or PR</span>
+    </h1>
+  </div>
+  <p class="hero-sub">
+    Paste a GitHub issue or PR URL. OwlScope fetches its context and generates an investigation report.
+  </p>
+
+  <div class="status-badge {% if ollama_ok %}status-ok{% else %}status-err{% endif %}">
+    {% if ollama_ok %}
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="vertical-align:middle;margin-right:5px"><circle cx="6" cy="6" r="5" fill="currentColor" opacity="0.25"/><circle cx="6" cy="6" r="3" fill="currentColor"/></svg>Ollama connected
+    {% else %}
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="vertical-align:middle;margin-right:5px"><path d="M6 1L11 10H1L6 1Z" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M6 5v2.5M6 9h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Ollama unreachable &mdash; set <code>OLLAMA_HOST</code> in <code>.env</code>
+    {% endif %}
+  </div>
+
+  <form action="{{ url_for('analyze') }}" method="POST" class="analyze-form" id="analyzeForm">
+    <div class="input-row">
+      <input
+        type="url"
+        name="url"
+        id="urlInput"
+        class="url-input"
+        placeholder="https://github.com/owner/repo/issues/123"
+        required
+        autofocus
+      />
+      <button type="submit" class="btn-primary" id="submitBtn">
+        <span id="btnText">Investigate</span>
+      </button>
+    </div>
+    <p class="input-hint">
+      Works with public repos &nbsp;·&nbsp; No GitHub token required &nbsp;·&nbsp; Supports Issues and Pull Requests
+    </p>
+  </form>
+</div>
+
+{% if recent %}
+<section class="recent-section">
+  <h2 class="section-title">Recent Reports</h2>
+  <ul class="recent-list">
+    {% for r in recent %}
+    <li class="recent-item">
+      <a href="{{ url_for('view_report', cache_key=r.key) }}" class="recent-link">
+        <span class="recent-title">{{ r.title or "Untitled" }}</span>
+        <span class="recent-meta">{{ r.url }}</span>
+      </a>
+      <span class="recent-date">{{ r.cached_at[:10] if r.cached_at else "" }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<script>
+  document.getElementById("analyzeForm").addEventListener("submit", function () {
+    var btn = document.getElementById("submitBtn");
+    var txt = document.getElementById("btnText");
+    btn.disabled = true;
+    txt.textContent = "Analyzing…";
+    btn.classList.add("btn-loading");
+  });
+</script>
+{% endblock %}
